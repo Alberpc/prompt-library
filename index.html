@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Biblioteca de Prompts · v2.1</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Tailwind: activar modo oscuro por clase
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: [
+                "Inter",
+                "ui-sans-serif",
+                "system-ui",
+                "-apple-system",
+                "Segoe UI",
+                "Roboto",
+                "Arial",
+                "Noto Sans",
+                "sans-serif",
+              ],
+            },
+            boxShadow: {
+              card: "0 8px 24px rgba(2,6,23,0.08)",
+            },
+          },
+        },
+      };
+      // Aplicar tema ASAP para evitar FOUC
+      (function initThemeEarly() {
+        try {
+          const saved = localStorage.getItem("promptLibrary.theme");
+          if (saved === "dark") document.documentElement.classList.add("dark");
+          else if (saved === "light")
+            document.documentElement.classList.remove("dark");
+          else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch {}
+      })();
+    </script>
+    <meta name="color-scheme" content="light dark" />
+  </head>
+  <body
+    class="h-full font-sans bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-100"
+  >
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header -->
+      <header
+        class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="h-10 w-10 rounded-2xl bg-indigo-600/10 text-indigo-600 flex items-center justify-center shadow-card"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 5a2 2 0 0 1 2-2h6a1 1 0 1 1 0 2H6v14h12v-6a1 1 0 1 1 2 0v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5z"
+              />
+              <path
+                d="M14.5 3a1 1 0 0 1 1-1H20a1 1 0 0 1 1 1v4.5a1 1 0 1 1-2 0V5.414l-9.793 9.793a1 1 0 0 1-1.414-1.414L17.586 4H15.5a1 1 0 0 1-1-1z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight">
+              Biblioteca de Prompts
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">
+              Guarda, busca, filtra por categoría y reutiliza tus prompts.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Theme toggle -->
+          <button
+            id="btnTheme"
+            class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm shadow-card hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition"
+            title="Cambiar tema (claro/oscuro)"
+          >
+            <svg
+              id="iconSun"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 hidden dark:inline"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4V2m0 20v-2M4 12H2m20 0h-2M5 5 3.5 3.5M20.5 20.5 19 19M5 19 3.5 20.5M20.5 3.5 19 5M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"
+              />
+            </svg>
+            <svg
+              id="iconMoon"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 dark:hidden"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+              />
+            </svg>
+            <span class="hidden sm:inline">Tema</span>
+          </button>
+
+          <!-- Add Button -->
+          <button
+            id="btnAdd"
+            class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 shadow-card transition active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 5v14m7-7H5"
+              />
+            </svg>
+            Nuevo prompt
+          </button>
+        </div>
+      </header>
+
+      <!-- Search + Category filter -->
+      <section class="mt-6 space-y-3">
+        <div class="relative">
+          <input
+            id="search"
+            type="search"
+            placeholder="Buscar por título, contenido o categoría…"
+            class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/60 backdrop-blur px-4 py-3 pl-11 shadow-card focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            autocomplete="off"
+          />
+          <div
+            class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="m21 21-4.35-4.35M5 11a6 6 0 1 0 12 0A6 6 0 0 0 5 11z"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Category chips (mejorados) -->
+        <div
+          id="chips"
+          class="flex gap-2 overflow-x-auto pb-1"
+          aria-label="Filtro por categoría"
+        ></div>
+      </section>
+
+      <!-- Counter + Hint -->
+      <div class="mt-3 flex items-center justify-between">
+        <p id="counter" class="text-sm text-slate-500 dark:text-slate-400"></p>
+        <p class="text-xs text-slate-400">
+          Atajos:
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800"
+            >N</kbd
+          >
+          nuevo ·
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800"
+            >/</kbd
+          >
+          buscar
+        </p>
+      </div>
+
+      <!-- Cards Grid -->
+      <main
+        id="grid"
+        class="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 min-h-[120px]"
+        aria-live="polite"
+      ></main>
+
+      <!-- Empty state -->
+      <template id="tmpl-empty">
+        <div class="col-span-full">
+          <div
+            class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-10 text-center"
+          >
+            <p class="text-slate-600 dark:text-slate-300 font-medium">
+              No hay prompts aún
+            </p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+              Clic en <em>Nuevo prompt</em> para comenzar.
+            </p>
+          </div>
+        </div>
+      </template>
+
+      <!-- Card Template -->
+      <template id="tmpl-card">
+        <article
+          class="group h-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card hover:shadow-lg transition overflow-hidden"
+        >
+          <div class="p-4 flex flex-col h-full">
+            <h3 class="text-base font-semibold leading-snug pr-10"></h3>
+            <p
+              class="mt-2 text-sm text-slate-600 dark:text-slate-300 flex-1"
+              style="
+                display: -webkit-box;
+                -webkit-line-clamp: 4;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+              "
+            ></p>
+            <div class="mt-3 flex flex-wrap gap-1.5" data-tags></div>
+            <div class="mt-4 flex items-center justify-between">
+              <span class="text-xs text-slate-400"></span>
+              <div class="flex gap-1.5">
+                <button
+                  class="inline-flex items-center justify-center rounded-lg p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  data-action="copy"
+                  title="Copiar"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 16h8a2 2 0 0 0 2-2V6m-6 12H6a2 2 0 0 1-2-2V8m6 10 8-8M8 16l8-8"
+                    />
+                  </svg>
+                </button>
+                <button
+                  class="inline-flex items-center justify-center rounded-lg p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  data-action="edit"
+                  title="Editar"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15.232 5.232a2.5 2.5 0 0 1 3.536 3.536L8.5 19.036l-4 1 1-4 9.732-10.804z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  class="inline-flex items-center justify-center rounded-lg p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                  data-action="delete"
+                  title="Eliminar"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 7h12M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m1 0-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7m3 4v6m6-6v6"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </template>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="fixed inset-0 z-50 hidden">
+      <div
+        id="overlay"
+        class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+      ></div>
+
+      <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modalTitle"
+          aria-describedby="modalDesc"
+          class="w-full max-w-2xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card"
+        >
+          <form id="form" class="p-5 sm:p-6">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="modalTitle" class="text-xl font-semibold">
+                  Nuevo prompt
+                </h2>
+                <p
+                  id="modalDesc"
+                  class="text-sm text-slate-500 dark:text-slate-400"
+                >
+                  Completa los campos y guarda.
+                </p>
+              </div>
+              <button
+                type="button"
+                id="btnClose"
+                class="inline-flex items-center justify-center rounded-lg p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-card"
+                title="Cerrar (Esc)"
+              >
+                <svg
+                  class="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="m6 6 12 12M6 18 18 6"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <input type="hidden" id="promptId" />
+
+            <div class="mt-4 grid gap-4">
+              <div>
+                <label for="title" class="block text-sm font-medium mb-1"
+                  >Título</label
+                >
+                <input
+                  id="title"
+                  name="title"
+                  type="text"
+                  required
+                  class="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 shadow-card focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label for="content" class="block text-sm font-medium mb-1"
+                  >Contenido</label
+                >
+                <textarea
+                  id="content"
+                  name="content"
+                  required
+                  rows="10"
+                  class="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 shadow-card focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Escribe tu prompt aquí…"
+                ></textarea>
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between">
+                  <label for="categories" class="block text-sm font-medium mb-1"
+                    >Categorías</label
+                  >
+                  <small class="text-xs text-slate-500 dark:text-slate-400"
+                    >Separadas por coma · ej. diseño web, imágenes</small
+                  >
+                </div>
+                <input
+                  id="categories"
+                  name="categories"
+                  type="text"
+                  placeholder="diseño web, imágenes, marketing"
+                  class="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 shadow-card focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  list="cats-suggest"
+                />
+                <datalist id="cats-suggest"></datalist>
+                <div
+                  class="mt-2 flex flex-wrap gap-1.5 text-xs"
+                  id="catsPreview"
+                ></div>
+              </div>
+            </div>
+
+            <div class="mt-5 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                id="btnCancel"
+                class="rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                id="btnSave"
+                class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 shadow-card"
+              >
+                Guardar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toasts -->
+    <div id="toasts" class="fixed bottom-4 right-4 z-[60] space-y-2"></div>
+
+    <!-- App Script -->
+    <script>
+      (() => {
+        "use strict";
+
+        // =============================
+        // Estado & refs
+        // =============================
+        const STORAGE_KEY_V2 = "promptLibrary.v2";
+        const STORAGE_KEY_V1 = "promptLibrary.v1";
+        const THEME_KEY = "promptLibrary.theme";
+
+        const els = {
+          grid: document.getElementById("grid"),
+          chips: document.getElementById("chips"),
+          search: document.getElementById("search"),
+          counter: document.getElementById("counter"),
+          btnAdd: document.getElementById("btnAdd"),
+          btnTheme: document.getElementById("btnTheme"),
+          modal: document.getElementById("modal"),
+          overlay: document.getElementById("overlay"),
+          btnClose: document.getElementById("btnClose"),
+          btnCancel: document.getElementById("btnCancel"),
+          form: document.getElementById("form"),
+          fieldId: document.getElementById("promptId"),
+          fieldTitle: document.getElementById("title"),
+          fieldContent: document.getElementById("content"),
+          fieldCats: document.getElementById("categories"),
+          catsPreview: document.getElementById("catsPreview"),
+          catsSuggest: document.getElementById("cats-suggest"),
+          toasts: document.getElementById("toasts"),
+          tmplCard: document.getElementById("tmpl-card"),
+          tmplEmpty: document.getElementById("tmpl-empty"),
+        };
+
+        const state = {
+          prompts: [],
+          query: "",
+          category: "Todas",
+          lastFocus: null,
+        };
+
+        // =============================
+        // Utils
+        // =============================
+        const nowISO = () => new Date().toISOString();
+        const uid = () =>
+          `${Date.now().toString(36)}-${Math.random()
+            .toString(36)
+            .slice(2, 8)}`;
+        const normalize = (s) =>
+          (s || "")
+            .toString()
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/\p{Diacritic}/gu, "");
+        const uniq = (arr) => Array.from(new Set(arr));
+        const supportsLocalStorage = (() => {
+          try {
+            localStorage.setItem("__t", "1");
+            localStorage.removeItem("__t");
+            return true;
+          } catch {
+            return false;
+          }
+        })();
+        const save = () =>
+          supportsLocalStorage &&
+          localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state.prompts));
+        const loadV2 = () =>
+          supportsLocalStorage
+            ? JSON.parse(localStorage.getItem(STORAGE_KEY_V2) || "null")
+            : null;
+        const loadV1 = () =>
+          supportsLocalStorage
+            ? JSON.parse(localStorage.getItem(STORAGE_KEY_V1) || "null")
+            : null;
+        const toast = (msg, type = "ok") => {
+          const wrap = document.createElement("div");
+          wrap.className = `pointer-events-auto rounded-xl px-4 py-2 shadow-card text-sm ${
+            type === "ok"
+              ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+              : "bg-rose-600 text-white"
+          }`;
+          wrap.textContent = msg;
+          els.toasts.appendChild(wrap);
+          setTimeout(() => wrap.remove(), 2200);
+        };
+        const debounce = (fn, ms = 250) => {
+          let t;
+          return (...a) => {
+            clearTimeout(t);
+            t = setTimeout(() => fn(...a), ms);
+          };
+        };
+        const fmtDate = (iso) => {
+          try {
+            return new Date(iso).toLocaleDateString(undefined, {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            });
+          } catch {
+            return "";
+          }
+        };
+        const parseCats = (raw) =>
+          uniq(
+            (raw || "")
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+              .map((s) => s.replace(/\s+/g, " "))
+          );
+
+        // =============================
+        // Tema
+        // =============================
+        function toggleTheme() {
+          const isDark = document.documentElement.classList.toggle("dark");
+          try {
+            localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
+          } catch {}
+        }
+        els.btnTheme.addEventListener("click", toggleTheme);
+
+        // =============================
+        // Render chips (botones visuales)
+        // =============================
+        const chipBase =
+          "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition shadow-card bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500";
+        const chipActive =
+          "bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent hover:shadow-lg";
+
+        function renderChips() {
+          const allCats = uniq(
+            state.prompts.flatMap((p) => p.categories || [])
+          ).sort((a, b) => a.localeCompare(b, "es"));
+          els.chips.textContent = "";
+
+          const makeChip = (label) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className =
+              chipBase + (state.category === label ? ` ${chipActive}` : "");
+            btn.textContent = label;
+            btn.dataset.cat = label;
+            return btn;
+          };
+          els.chips.appendChild(makeChip("Todas"));
+          for (const c of allCats) els.chips.appendChild(makeChip(c));
+
+          // datalist de sugerencias
+          els.catsSuggest.textContent = "";
+          for (const c of allCats) {
+            const opt = document.createElement("option");
+            opt.value = c;
+            els.catsSuggest.appendChild(opt);
+          }
+        }
+
+        // =============================
+        // Render tarjetas
+        // =============================
+        function render() {
+          const list = getFiltered();
+          els.grid.textContent = "";
+
+          const suffix =
+            state.category === "Todas" ? "" : ` · ${state.category}`;
+          els.counter.textContent = list.length
+            ? `${list.length} resultado${list.length !== 1 ? "s" : ""} · ${
+                state.prompts.length
+              } total${suffix}`
+            : `${state.prompts.length} total${suffix}`;
+
+          if (!list.length) {
+            els.grid.append(els.tmplEmpty.content.cloneNode(true));
+            return;
+          }
+
+          const frag = document.createDocumentFragment();
+          for (const p of list) {
+            const node = els.tmplCard.content.cloneNode(true);
+            const root = node.querySelector("article");
+            root.dataset.id = p.id;
+
+            node.querySelector("h3").textContent = p.title;
+            node.querySelector("p").textContent = p.content;
+            node.querySelector("span").textContent = `Actualizado ${fmtDate(
+              p.updatedAt || p.createdAt
+            )}`;
+
+            const tagsWrap = node.querySelector("[data-tags]");
+            (p.categories || []).forEach((cat) => {
+              const s = document.createElement("span");
+              s.className =
+                "inline-flex items-center rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-0.5 text-[11px] text-slate-600 dark:text-slate-300";
+              s.textContent = cat;
+              tagsWrap.appendChild(s);
+            });
+
+            frag.appendChild(node);
+          }
+          els.grid.appendChild(frag);
+        }
+
+        function getFiltered() {
+          const nq = normalize(state.query);
+          return state.prompts.filter((p) => {
+            const catOk =
+              state.category === "Todas" ||
+              (p.categories || []).includes(state.category);
+            if (!nq) return catOk;
+            const hay =
+              normalize(p.title).includes(nq) ||
+              normalize(p.content).includes(nq) ||
+              (p.categories || []).some((c) => normalize(c).includes(nq));
+            return catOk && hay;
+          });
+        }
+
+        // =============================
+        // Modal
+        // =============================
+        function openModal(mode = "create", prompt = null) {
+          state.lastFocus = document.activeElement;
+          els.modal.classList.remove("hidden");
+          document.body.style.overflow = "hidden";
+
+          if (mode === "edit" && prompt) {
+            els.fieldId.value = prompt.id;
+            els.fieldTitle.value = prompt.title;
+            els.fieldContent.value = prompt.content;
+            els.fieldCats.value = (prompt.categories || []).join(", ");
+            document.getElementById("modalTitle").textContent = "Editar prompt";
+            document.getElementById("modalDesc").textContent =
+              "Modifica y guarda los cambios.";
+          } else {
+            els.fieldId.value = "";
+            els.fieldTitle.value = "";
+            els.fieldContent.value = "";
+            els.fieldCats.value = "";
+            document.getElementById("modalTitle").textContent = "Nuevo prompt";
+            document.getElementById("modalDesc").textContent =
+              "Completa los campos y guarda.";
+          }
+          updateCatsPreview();
+          setTimeout(() => els.fieldTitle.focus(), 0);
+        }
+
+        function closeModal() {
+          els.modal.classList.add("hidden");
+          document.body.style.overflow = "";
+          if (state.lastFocus && state.lastFocus.focus) state.lastFocus.focus();
+        }
+
+        function updateCatsPreview() {
+          els.catsPreview.textContent = "";
+          parseCats(els.fieldCats.value).forEach((c) => {
+            const s = document.createElement("span");
+            s.className =
+              "inline-flex items-center rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-0.5 text-[11px] text-slate-600 dark:text-slate-300";
+            s.textContent = c;
+            els.catsPreview.appendChild(s);
+          });
+        }
+
+        // =============================
+        // CRUD
+        // =============================
+        function createPrompt(title, content, categories) {
+          const p = {
+            id: uid(),
+            title: title.trim(),
+            content: content.trim(),
+            categories,
+            createdAt: nowISO(),
+            updatedAt: null,
+          };
+          state.prompts.unshift(p);
+          save();
+          renderChips();
+          render();
+          toast("Prompt guardado");
+        }
+
+        function updatePrompt(id, title, content, categories) {
+          const i = state.prompts.findIndex((p) => p.id === id);
+          if (i === -1) return;
+          state.prompts[i] = {
+            ...state.prompts[i],
+            title: title.trim(),
+            content: content.trim(),
+            categories,
+            updatedAt: nowISO(),
+          };
+          save();
+          renderChips();
+          render();
+          toast("Cambios guardados");
+        }
+
+        function deletePrompt(id) {
+          const i = state.prompts.findIndex((p) => p.id === id);
+          if (i === -1) return;
+          state.prompts.splice(i, 1);
+          save();
+          renderChips();
+          render();
+          toast("Prompt eliminado");
+        }
+
+        // =============================
+        // Eventos
+        // =============================
+        // Buscar
+        els.search.addEventListener(
+          "input",
+          debounce((e) => {
+            state.query = e.target.value;
+            render();
+          }, 120)
+        );
+        // Foco rápido con "/"
+        window.addEventListener("keydown", (e) => {
+          if (
+            e.key === "/" &&
+            document.activeElement !== els.search &&
+            els.modal.classList.contains("hidden")
+          ) {
+            e.preventDefault();
+            els.search.focus();
+          }
+        });
+
+        // Chips
+        els.chips.addEventListener("click", (e) => {
+          const btn = e.target.closest("button[data-cat]");
+          if (!btn) return;
+          state.category = btn.dataset.cat;
+          renderChips();
+          render();
+        });
+
+        // Abrir modal crear
+        els.btnAdd.addEventListener("click", () => openModal("create"));
+
+        // Cerrar modal
+        els.btnClose.addEventListener("click", closeModal);
+        els.btnCancel.addEventListener("click", closeModal);
+        els.overlay.addEventListener("click", closeModal);
+
+        // Atajos: Esc, N
+        window.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && !els.modal.classList.contains("hidden")) {
+            e.preventDefault();
+            closeModal();
+          } else if (
+            (e.key === "n" || e.key === "N") &&
+            els.modal.classList.contains("hidden")
+          ) {
+            openModal("create");
+          }
+        });
+
+        // Preview de categorías en vivo
+        els.fieldCats.addEventListener(
+          "input",
+          debounce(updateCatsPreview, 80)
+        );
+
+        // Envío form
+        els.form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const id = els.fieldId.value;
+          const title = els.fieldTitle.value;
+          const content = els.fieldContent.value;
+          const categories = parseCats(els.fieldCats.value);
+
+          if (!title.trim() || !content.trim()) {
+            toast("Completa título y contenido", "err");
+            return;
+          }
+          if (id) updatePrompt(id, title, content, categories);
+          else createPrompt(title, content, categories);
+
+          closeModal();
+        });
+
+        // Acciones en tarjeta
+        els.grid.addEventListener("click", async (e) => {
+          const btn = e.target.closest("button[data-action]");
+          if (!btn) return;
+          const card = e.target.closest("article");
+          const id = card?.dataset?.id;
+          if (!id) return;
+          const prompt = state.prompts.find((p) => p.id === id);
+          if (!prompt) return;
+
+          const action = btn.dataset.action;
+          if (action === "copy") {
+            const text = `${prompt.title}\n\n${
+              prompt.content
+            }\n\nCategorías: ${(prompt.categories || []).join(", ")}`;
+            try {
+              await navigator.clipboard.writeText(text);
+              toast("Copiado al portapapeles");
+            } catch {
+              const ta = document.createElement("textarea");
+              ta.value = text;
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand("copy");
+              ta.remove();
+              toast("Copiado");
+            }
+          } else if (action === "edit") {
+            openModal("edit", prompt);
+          } else if (action === "delete") {
+            const ok = confirm(
+              "¿Eliminar este prompt? Esta acción no se puede deshacer."
+            );
+            if (ok) deletePrompt(id);
+          }
+        });
+
+        // =============================
+        // Init / Migración
+        // =============================
+        function seedIfEmpty() {
+          const seed = (title, content, categories) => ({
+            id: uid(),
+            title,
+            content,
+            categories,
+            createdAt: nowISO(),
+            updatedAt: null,
+          });
+          return [
+            seed(
+              "Diseño Web · Beneficios en landing",
+              `Contexto: Landing WordPress + Elementor.
+Tarea: Escribe 6 beneficios (≤14 palabras) con verbo + resultado medible. Añade micro-copia para CTA (≤10 palabras).`,
+              ["diseño web", "copywriting"]
+            ),
+            seed(
+              "Imágenes · Prompt de restauración foto antigua",
+              `Rol: Experto en restauración. Devuelve un prompt para restaurar foto B/N con ruido, mejorar nitidez, respetar rasgos. Incluye parámetros y variantes.`,
+              ["imágenes", "restauración"]
+            ),
+            seed(
+              "Marketing · Email de bienvenida",
+              `Escribe un email de bienvenida cálido, 120–160 palabras, tono cercano, con CTA a demo y PS con recurso gratuito.`,
+              ["marketing", "email"]
+            ),
+          ];
+        }
+
+        function migrateIfNeeded() {
+          const v2 = loadV2();
+          if (Array.isArray(v2) && v2.length) {
+            state.prompts = v2;
+            return;
+          }
+
+          const v1 = loadV1();
+          if (Array.isArray(v1) && v1.length) {
+            state.prompts = v1.map((p) => ({
+              id: p.id || uid(),
+              title: p.title || "Sin título",
+              content: p.content || "",
+              categories: [],
+              createdAt: p.createdAt || nowISO(),
+              updatedAt: p.updatedAt || null,
+            }));
+            save();
+            return;
+          }
+
+          state.prompts = seedIfEmpty();
+          save();
+        }
+
+        function init() {
+          migrateIfNeeded();
+          renderChips();
+          render();
+          setTimeout(() => els.search.focus(), 0);
+          if (!supportsLocalStorage)
+            toast(
+              "Aviso: Sin acceso a localStorage, no se guardarán cambios",
+              "err"
+            );
+        }
+
+        init();
+      })();
+    </script>
+  </body>
+</html>
