@@ -36,5 +36,5 @@ La IA ha servido como apoyo en el diseño, la arquitectura y la generación del 
 
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/TU_USUARIO/prompt-library.git
+   git clone https://github.com/Alberpc/prompt-library.git
    cd prompt-library
