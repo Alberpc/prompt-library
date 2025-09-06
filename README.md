@@ -27,7 +27,7 @@ La IA ha servido como apoyo en el diseño, la arquitectura y la generación del 
 
 ## 🚀 Demo
 
-[Accede aquí a la demo en GitHub Pages](https://TU_USUARIO.github.io/prompt-library/)  
+[Accede aquí a la demo en GitHub Pages]((https://alberpc.github.io/prompt-library/))  
 *(reemplaza con tu URL real cuando actives GitHub Pages)*
 
 ---
